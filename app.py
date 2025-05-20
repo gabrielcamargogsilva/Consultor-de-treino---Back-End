@@ -64,7 +64,7 @@ def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao
 
 @app.route('/')
 def home():
-    return 'oi'
+    return 'API está funcionando!'
 
 # Rota padrão JSON
 @app.route('/gerar_treino', methods=['POST'])
