@@ -5,7 +5,7 @@
 Esta é a **API REST** responsável por gerar planos de treino personalizados com base nas informações fornecidas pelo usuário. Ela utiliza a **IA generativa da Google (Gemini)** para montar um plano detalhado em Markdown, com sugestões e avisos importantes. A API foi desenvolvida em **Python** com **Flask**, utilizando boas práticas de validação de dados e separação de responsabilidades.
 
 ## Status do Projeto
-🚧 Em desenvolvimento
+✅ Projeto Finalizado
 
 ## Índice
 - [Funcionalidades](#funcionalidades)
