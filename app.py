@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_file  # Incluído send_file para enviar PDF
+from flask import Flask, jsonify, request 
 import json
 from flask_cors import CORS
 from google import genai
@@ -14,6 +14,7 @@ app = Flask(__name__)
 CORS(app)
 
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+
 
 # Função para criar o plano de treino via Gemini
 def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao_treino):
@@ -49,7 +50,7 @@ def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao
     """
 
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=prompt,
         config={
             "response_mime_type": "application/json",
