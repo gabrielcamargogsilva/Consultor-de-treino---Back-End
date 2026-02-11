@@ -1,9 +1,11 @@
-from flask import Flask, jsonify, request 
+from flask import Flask, jsonify, request, send_file
 import json
 from flask_cors import CORS
 from google import genai
 import os
 from dotenv import load_dotenv
+from fpdf import FPDF
+import io
 
 
 
@@ -89,6 +91,77 @@ def gerar_treino():
 
     except Exception as e:
         print(f"Erro ao gerar treino: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/baixar_treino', methods=['POST'])
+def baixar_treino():
+    try:
+        dados = request.get_json()
+        
+        # Extrair as partes do seu JSON
+        avisos = dados.get('avisos_importantes', [])
+        plano = dados.get('plano_markdown', '')
+        sugestoes = dados.get('sugestoes_adicionais', '')
+
+        # Criar o objeto PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        
+        # Define as margens explicitamente (em mm)
+        pdf.set_left_margin(15)
+        pdf.set_right_margin(15)
+        
+        # Calcula a largura útil da página (Largura total - margens)
+        largura_util = pdf.w - pdf.l_margin - pdf.r_margin
+
+        # Função para limpar e imprimir
+        def adicionar_paragrafo(titulo, texto, fonte_tamanho=10, negrito=False):
+            if titulo:
+                pdf.set_font("Arial", 'B', 12)
+                pdf.cell(largura_util, 10, txt=titulo, ln=True)
+            
+            estilo = 'B' if negrito else ''
+            pdf.set_font("Arial", estilo, fonte_tamanho)
+            
+            # O truque está aqui: passamos largura_util em vez de 0
+            # e garantimos que o texto não tem tabs (\t) que quebram o layout
+            texto_formatado = str(texto).replace('\t', '    ').replace('#', '').replace('*', '')
+            texto_final = texto_formatado.encode('latin-1', 'replace').decode('latin-1')
+            
+            pdf.multi_cell(largura_util, 7, txt=texto_final)
+            pdf.ln(5)
+
+        # 1. Título Principal
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(largura_util, 10, txt="TreinAI - Seu Plano Personalizado", ln=True, align='C')
+        pdf.ln(10)
+
+        # 2. Adicionar as seções usando a função segura
+        if avisos:
+            adicionar_paragrafo("AVISOS IMPORTANTES", "\n".join(avisos), negrito=True)
+        
+        if plano:
+            adicionar_paragrafo("PLANO DE TREINO", plano)
+            
+        if sugestoes:
+            adicionar_paragrafo("SUGESTÕES ADICIONAIS", sugestoes)
+
+        # Gerar o arquivo para download
+        pdf_output = io.BytesIO()
+        pdf_bytes = pdf.output() # No fpdf2, output() sem argumentos retorna os bytes
+        pdf_output.write(pdf_bytes)
+        pdf_output.seek(0)
+
+        return send_file(
+            pdf_output,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='meu_treino_treinai.pdf'
+        )
+
+    except Exception as e:
+        print(f"Erro ao gerar PDF: {e}")
         return jsonify({'error': str(e)}), 500
 
 
