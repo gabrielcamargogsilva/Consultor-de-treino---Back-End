@@ -9,6 +9,7 @@ import io
 
 
 
+
 # Carrega variáveis de ambiente do .env
 load_dotenv()
 
@@ -16,6 +17,7 @@ app = Flask(__name__)
 CORS(app)
 
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+
 
 
 # Função para criar o plano de treino via Gemini
@@ -52,7 +54,7 @@ def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao
     """
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-1.5-flash",
         contents=prompt,
         config={
             "response_mime_type": "application/json",
