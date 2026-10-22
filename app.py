@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, send_file
 import json
 from flask_cors import CORS
+from google.genai import types
 from google import genai
 import os
 from dotenv import load_dotenv
@@ -17,6 +18,53 @@ app = Flask(__name__)
 CORS(app)
 
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+
+# Base inicial de exercícios
+EXERCICIOS = {
+    "peito": [
+        "Supino reto",
+        "Supino inclinado",
+        "Crucifixo"
+    ],
+    "costas": [
+        "Puxada frontal",
+        "Remada baixa",
+        "Remada unilateral"
+    ],
+    "pernas": [
+        "Agachamento",
+        "Leg press",
+        "Cadeira extensora"
+    ]
+}
+
+
+# Ferramenta para consultar exercícios por grupo muscular
+def buscar_exercicios(grupo_muscular: str) -> list:
+    """Busca exercícios disponíveis para um grupo muscular.
+
+    Args:
+        grupo_muscular: Grupo muscular, como peito, costas ou pernas.
+    """
+    grupo = grupo_muscular.strip().lower()
+
+    return EXERCICIOS.get(grupo, [])
+
+def testar_agente():
+    resposta = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=(
+            "Monte uma sugestão de treino para costas. "
+            "Antes de responder, consulte a ferramenta "
+            "buscar_exercicios para saber quais exercícios "
+            "estão disponíveis. Use os exercícios retornados."
+        ),
+        config={
+            "tools": [buscar_exercicios]
+        }
+    )
+
+    return resposta.text
 
 
 
@@ -42,6 +90,16 @@ def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao
         - Acesso a Equipamentos: {acesso_equipamentos}
         - Restrições Físicas: {restricoes}
         - Especificação do Treino (caso o usuário queira algo específico, como "adaptação para jogadores de basquete"): {especificacao_treino}
+        
+        Ferramentas disponíveis:
+        - buscar_exercicios(grupo_muscular): consulta os exercícios
+          cadastrados para peito, costas ou pernas.
+
+        Antes de montar o plano, consulte essa ferramenta para
+        os grupos musculares que pretende trabalhar.
+        Priorize os exercícios retornados pela ferramenta.
+        Não invente resultados da ferramenta nem afirme que
+        consultou exercícios que não foram retornados.
 
         Instruções para o conteúdo de "plano_markdown":
         1. Deve ser uma string única contendo o plano de treino completo.
@@ -54,12 +112,21 @@ def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao
     """
 
     response = client.models.generate_content(
-        model="gemini-1.5-flash",
+        model="gemini-3.8-flash",
         contents=prompt,
         config={
-            "response_mime_type": "application/json",
+            "tools": [buscar_exercicios],
+            "automatic_function_calling": types.AutomaticFunctionCallingConfig(
+                maximum_remote_calls = 2,
+            ),
         }
     )
+    
+    if response.text is None:
+        raise ValueError(
+            "O Gemini não retornou texto JSON"
+            "Verifique se houve uma chamada de ferramenta ou se a resposta foi bloqueada."
+        )
 
     response = json.loads(response.text)
     return response
