@@ -50,22 +50,42 @@ def buscar_exercicios(grupo_muscular: str) -> list:
 
     return EXERCICIOS.get(grupo, [])
 
-def testar_agente():
-    resposta = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=(
-            "Monte uma sugestão de treino para costas. "
-            "Antes de responder, consulte a ferramenta "
-            "buscar_exercicios para saber quais exercícios "
-            "estão disponíveis. Use os exercícios retornados."
-        ),
-        config={
-            "tools": [buscar_exercicios]
-        }
-    )
 
-    return resposta.text
 
+
+
+
+def validar_resposta_treino(resultado):
+    """Valida a estrutura da resposta gerada pela IA."""
+
+    if not isinstance(resultado, dict):
+        raise ValueError("A resposta do treino deve ser um objeto JSON.")
+
+    campos_obrigatorios = {
+        "plano_markdown": str,
+        "avisos_importantes": list,
+        "sugestoes_adicionais": str,
+    }
+
+    for campo, tipo_esperado in campos_obrigatorios.items():
+        if campo not in resultado:
+            raise ValueError(f"Campo obrigatório ausente: {campo}")
+
+        if not isinstance(resultado[campo], tipo_esperado):
+            raise ValueError(
+                f"O campo '{campo}' deve ser do tipo "
+                f"{tipo_esperado.__name__}."
+            )
+
+    if not all(
+        isinstance(aviso, str)
+        for aviso in resultado["avisos_importantes"]
+    ):
+        raise ValueError(
+            "Todos os avisos importantes devem ser textos."
+        )
+
+    return resultado
 
 
 # Função para criar o plano de treino via Gemini
@@ -91,15 +111,22 @@ def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao
         - Restrições Físicas: {restricoes}
         - Especificação do Treino (caso o usuário queira algo específico, como "adaptação para jogadores de basquete"): {especificacao_treino}
         
+        
         Ferramentas disponíveis:
-        - buscar_exercicios(grupo_muscular): consulta os exercícios
-          cadastrados para peito, costas ou pernas.
+        - buscar_exercicios(grupo_muscular): consulta o catálogo
+          de exercícios cadastrados para peito, costas ou pernas.
 
-        Antes de montar o plano, consulte essa ferramenta para
-        os grupos musculares que pretende trabalhar.
-        Priorize os exercícios retornados pela ferramenta.
-        Não invente resultados da ferramenta nem afirme que
-        consultou exercícios que não foram retornados.
+        Regras de utilização das ferramentas:
+        1. Consulte o catálogo para cada grupo muscular
+           que pretenda trabalhar e que esteja disponível nele.
+        2. Priorize os exercícios retornados pela ferramenta.
+        3. Adapte a seleção ao nível, equipamentos e restrições
+           informados pelo usuário.
+        4. Não invente resultados nem afirme que consultou
+           exercícios que não foram retornados.
+        5. Se a ferramenta não retornar exercícios para um
+           grupo muscular, não invente resultados do catálogo.
+
 
         Instruções para o conteúdo de "plano_markdown":
         1. Deve ser uma string única contendo o plano de treino completo.
@@ -128,9 +155,15 @@ def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao
             "Verifique se houve uma chamada de ferramenta ou se a resposta foi bloqueada."
         )
 
-    response = json.loads(response.text)
-    return response
+    
+    try:
+        resultado = json.loads(response.text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "O Gemini retornou uma resposta que não é um JSON válido."
+        ) from exc
 
+    return validar_resposta_treino(resultado)
 
 
 
