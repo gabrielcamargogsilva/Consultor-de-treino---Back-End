@@ -1,11 +1,8 @@
-import pytest
 from app import buscar_exercicios, client
 from google.genai import types
-from google import genai
 
 
-
-def testar_agente():
+def executar_teste_agente():
     resposta = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=(
@@ -30,3 +27,7 @@ def testar_agente():
         )
 
     return resposta.text
+
+
+if __name__ == "__main__":
+    print(executar_teste_agente())
