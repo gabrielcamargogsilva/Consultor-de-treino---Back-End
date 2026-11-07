@@ -1,0 +1,21 @@
+{
+  "fontes": [
+    {
+      "categoria": "condicionamento",
+      "arquivo": "documentos/condicionamento/Guia-de-Exercicios.pdf"
+    },
+    {
+      "categoria": "forca",
+      "arquivo": "documentos/forca/Exercicios no treinamentos.pdf"
+    },
+    {
+      "categoria": "hipertrofia",
+      "arquivo": "documentos/hipertrofia/Guia dos Movimentos de Musculação PDF.pdf"
+    },
+    {
+      "categoria": "recuperacao",
+      "arquivo": "documentos/recuperacao/guia_pilates.pdf"
+    }
+
+  ]
+}
