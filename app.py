@@ -110,7 +110,7 @@ def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao
         - Acesso a Equipamentos: {acesso_equipamentos}
         - Restrições Físicas: {restricoes}
         - Especificação do Treino (caso o usuário queira algo específico, como "adaptação para jogadores de basquete"): {especificacao_treino}
-        
+
         
         Ferramentas disponíveis:
         - buscar_exercicios(grupo_muscular): consulta o catálogo
@@ -148,14 +148,14 @@ def criar_treino(objetivo, nivel, acesso_equipamentos, restricoes, especificacao
             ),
         }
     )
-    
+
     if response.text is None:
         raise ValueError(
             "O Gemini não retornou texto JSON"
             "Verifique se houve uma chamada de ferramenta ou se a resposta foi bloqueada."
         )
 
-    
+
     try:
         resultado = json.loads(response.text)
     except json.JSONDecodeError as exc:
