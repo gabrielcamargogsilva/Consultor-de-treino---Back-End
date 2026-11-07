@@ -121,6 +121,16 @@ Retorna uma mensagem simples de verificação:
 
 6. A API estará disponível em `http://localhost:5000`.
 
+### Indexar PDFs para busca semântica
+
+Coloque os documentos em `data/documentos/<categoria>/` e configure `GOOGLE_API_KEY` no `.env`. Na raiz do projeto, execute:
+
+```bash
+python -m services.ingestao_documentos
+```
+
+O banco vetorial será salvo em `chroma_db_treinai/`. Para consultar trechos relevantes pelo código, use `buscar_contexto_exercicios` em `services.busca_semantica`; esse serviço ainda não está conectado a uma rota HTTP.
+
 ## Autor
 - **Gabriel Camargo Gonçalves Silva**  
   [GitHub](https://github.com/gabrielcamargogsilva)  
